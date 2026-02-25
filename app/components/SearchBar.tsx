@@ -28,7 +28,6 @@ export default function SearchBar() {
 
     try {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-      console.log("Ma clé API est :", apiKey); // <-- Ajoute ça pour vérifier
 
       const res = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
