@@ -12,7 +12,8 @@ export async function POST(request: Request) {
 
     // 2. On réveille l'IA Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const modelName = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     // 3. On lui donne des ordres TRÈS stricts pour qu'elle réponde comme un robot
     const systemPrompt = `Tu es un libraire expert. L'utilisateur cherche des livres avec cette ambiance : "${prompt}". 
