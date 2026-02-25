@@ -29,13 +29,8 @@ export default function SearchBar() {
     try {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
 
-      const res = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
-          query
-        )}&maxResults=5&key=${apiKey}`
-      );
-      
-      const data = await res.json();
+      const response = await fetch(`/api/books?q=${query}`);
+      const data = await response.json();
       
       // Si Google renvoie une erreur, on l'affiche en détail !
       if (data.error) {
