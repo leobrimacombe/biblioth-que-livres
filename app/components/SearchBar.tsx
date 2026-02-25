@@ -27,17 +27,21 @@ export default function SearchBar() {
     console.log("1. Recherche lancée pour :", query); // On vérifie que le bouton marche
 
     try {
-        // On récupère la clé depuis les variables d'environnement
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+      console.log("Ma clé API est :", apiKey); // <-- Ajoute ça pour vérifier
 
-        const res = await fetch(
+      const res = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
-            query
+          query
         )}&maxResults=5&key=${apiKey}`
-        );
+      );
       
       const data = await res.json();
-      console.log("2. Réponse de Google Books :", data); // On regarde ce que Google renvoie
+      
+      // Si Google renvoie une erreur, on l'affiche en détail !
+      if (data.error) {
+        console.error("❌ Détail de l'erreur Google :", data.error.message);
+      }
 
       if (data.items) {
         setResults(data.items);
