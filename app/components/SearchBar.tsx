@@ -1,8 +1,8 @@
-"use client"; // Indispensable pour utiliser useState dans Next.js App Router
+"use client";
 
 import { useState } from "react";
 
-// On définit le type des données que Google Books nous renvoie (juste ce dont on a besoin)
+// On garde ton interface !
 export interface Book {
   id: string;
   volumeInfo: {
@@ -14,9 +14,9 @@ export interface Book {
   };
 }
 
-export default function SearchBar() {
+// ⚠️ IMPORTANT : On ajoute { setBooks } ici pour communiquer avec page.tsx
+export default function SearchBar({ setBooks }: { setBooks: (books: Book[]) => void }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -24,25 +24,21 @@ export default function SearchBar() {
     if (!query.trim()) return;
 
     setLoading(true);
-    console.log("1. Recherche lancée pour :", query); // On vérifie que le bouton marche
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-
+      // On appelle ta route API sécurisée
       const response = await fetch(`/api/books?q=${query}`);
       const data = await response.json();
       
-      // Si Google renvoie une erreur, on l'affiche en détail !
       if (data.error) {
-        console.error("❌ Détail de l'erreur Google :", data.error.message);
+        console.error("❌ Détail de l'erreur Google :", data.error);
       }
 
       if (data.items) {
-        setResults(data.items);
-        console.log("3. Livres trouvés :", data.items.length);
+        // Au lieu de stocker les résultats ici, on les envoie à page.tsx !
+        setBooks(data.items);
       } else {
-        setResults([]);
-        console.log("3. Aucun livre trouvé dans data.items");
+        setBooks([]);
       }
       
     } catch (error) {
@@ -52,16 +48,16 @@ export default function SearchBar() {
     }
   };
 
+  // On ne retourne QUE le formulaire, plus l'affichage des livres !
   return (
     <div className="w-full max-w-2xl mx-auto mt-8">
-      {/* Le formulaire de recherche */}
       <form onSubmit={handleSearch} className="flex gap-2 mb-8">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher un livre, un auteur..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
         />
         <button
           type="submit"
@@ -71,32 +67,6 @@ export default function SearchBar() {
           {loading ? "Recherche..." : "Chercher"}
         </button>
       </form>
-
-      {/* L'affichage brut des résultats */}
-      <div className="grid gap-4">
-        {results.map((book) => (
-          <div key={book.id} className="p-4 border border-gray-200 rounded-lg flex gap-4 bg-white">
-            {book.volumeInfo.imageLinks?.thumbnail ? (
-              <img 
-                src={book.volumeInfo.imageLinks.thumbnail} 
-                alt={`Couverture de ${book.volumeInfo.title}`} 
-                className="w-16 h-24 object-cover rounded shadow"
-              />
-            ) : (
-              <div className="w-16 h-24 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500 text-center">
-                Pas d'image
-              </div>
-            )}
-            
-            <div>
-              <h3 className="font-bold text-lg text-gray-800">{book.volumeInfo.title}</h3>
-              <p className="text-gray-600">
-                {book.volumeInfo.authors ? book.volumeInfo.authors.join(", ") : "Auteur inconnu"}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
