@@ -12,7 +12,6 @@ export default function LibraryPage() {
   const [myBooks, setMyBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Charger les livres au démarrage
   useEffect(() => {
     fetchMyBooks();
   }, []);
@@ -32,7 +31,6 @@ export default function LibraryPage() {
     setLoading(false);
   };
 
-  // 2. Changer le statut (À lire, En cours, Terminé)
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase
       .from('user_books')
@@ -41,12 +39,10 @@ export default function LibraryPage() {
 
     if (error) alert("Erreur lors de la mise à jour !");
     else {
-      // Met à jour l'affichage instantanément
       setMyBooks(myBooks.map(book => book.id === id ? { ...book, status: newStatus } : book));
     }
   };
 
-  // 3. Mettre une note (1 à 5)
   const handleRatingChange = async (id: string, newRating: number) => {
     const { error } = await supabase
       .from('user_books')
@@ -59,7 +55,6 @@ export default function LibraryPage() {
     }
   };
 
-  // 4. Supprimer de la bibliothèque
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("Veux-tu vraiment supprimer ce livre de ta liste ?");
     if (!confirmDelete) return;
@@ -75,6 +70,21 @@ export default function LibraryPage() {
     }
   };
 
+  // Met à jour le texte à l'écran quand on tape
+  const handleLocalNotesChange = (id: string, newNotes: string) => {
+    setMyBooks(myBooks.map(book => book.id === id ? { ...book, notes: newNotes } : book));
+  };
+
+  // Sauvegarde dans la base de données uniquement quand on a fini de taper
+  const saveNotesToDB = async (id: string, currentNotes: string) => {
+    const { error } = await supabase
+      .from('user_books')
+      .update({ notes: currentNotes })
+      .eq('id', id);
+      
+    if (error) console.error("Erreur lors de la sauvegarde de l'avis :", error);
+  };
+
   if (loading) return <p className="p-8 text-center text-xl">Chargement de ta bibliothèque...</p>;
 
   return (
@@ -83,9 +93,7 @@ export default function LibraryPage() {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Ma Bibliothèque 📚
         </h1>
-        <Link href="/" className="text-blue-600 hover:underline font-medium">
-          &larr; Retour à l'accueil
-        </Link>
+        {/* On a enlevé le bouton retour à l'accueil d'ici vu qu'il est maintenant dans le Header ! */}
       </div>
 
       {myBooks.length === 0 ? (
@@ -96,11 +104,10 @@ export default function LibraryPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {myBooks.map((book) => (
             <div key={book.id} className="border border-gray-200 rounded-xl p-5 shadow-sm bg-white flex flex-col relative group hover:shadow-md transition-shadow">
               
-              {/* Le petit bouton rouge pour supprimer (en haut à droite) */}
               <button 
                 onClick={() => handleDelete(book.id)}
                 className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors bg-white rounded-full p-1 z-10"
@@ -110,7 +117,6 @@ export default function LibraryPage() {
               </button>
 
               <div className="flex gap-4 mb-4">
-                {/* Image du livre */}
                 <div className="w-24 flex-shrink-0">
                   {book.cover_url ? (
                     <img src={book.cover_url} alt={book.title} className="w-full rounded shadow-sm" />
@@ -119,12 +125,10 @@ export default function LibraryPage() {
                   )}
                 </div>
                 
-                {/* Titre, auteur et statut */}
                 <div className="flex-1 flex flex-col pt-1">
                   <h3 className="font-bold text-lg leading-tight mb-1 pr-6">{book.title}</h3>
                   <p className="text-gray-600 text-sm mb-4">{book.author}</p>
                   
-                  {/* Menu déroulant pour changer le statut */}
                   <select 
                     value={book.status} 
                     onChange={(e) => handleStatusChange(book.id, e.target.value)}
@@ -137,8 +141,8 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              {/* Zone des étoiles (Grisée si le livre n'est pas "Terminé") */}
-              <div className="mt-auto pt-4 border-t flex items-center justify-between">
+              {/* Zone des étoiles */}
+              <div className="mt-2 pt-4 border-t flex items-center justify-between">
                 <span className={`text-sm font-medium ${book.status === 'read' ? 'text-gray-700' : 'text-gray-400'}`}>
                   {book.status === 'read' ? 'Ta note :' : 'Termine-le pour noter'}
                 </span>
@@ -157,6 +161,19 @@ export default function LibraryPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Zone d'avis écrit (Uniquement si Terminé) */}
+              {book.status === 'read' && (
+                <div className="mt-4 pt-4 border-t border-dashed">
+                  <textarea
+                    placeholder="Qu'as-tu pensé de ce livre ? (Ton avis sera public si ton profil l'est)"
+                    value={book.notes || ''}
+                    onChange={(e) => handleLocalNotesChange(book.id, e.target.value)}
+                    onBlur={(e) => saveNotesToDB(book.id, e.target.value)}
+                    className="w-full text-sm p-3 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24 text-black"
+                  />
+                </div>
+              )}
 
             </div>
           ))}
