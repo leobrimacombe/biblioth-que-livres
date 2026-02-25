@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import SearchBar from './components/SearchBar';
+import Auth from './components/Auth';
+import Link from 'next/link';
 
 // 1. Initialisation de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -49,10 +51,15 @@ export default function Page() {
   return (
     <main className="p-8 max-w-5xl mx-auto">
       <h1 className="text-4xl font-bold mb-8 text-center">Trouver un livre</h1>
-      
-      {/* On passe la fonction setBooks à ta SearchBar pour qu'elle puisse 
-        mettre à jour la page une fois la recherche Google terminée 
-      */}
+      <div className="text-center mb-8">
+  <Link href="/library" className="text-blue-600 font-medium hover:underline">
+    📚 Voir ma bibliothèque
+  </Link>
+  <Link href="/discover" className="text-purple-600 font-medium hover:underline">
+    ✨ Découverte IA
+  </Link>
+</div>
+      <Auth />
       <SearchBar setBooks={setBooks} />
 
       {/* Affichage des résultats en grille */}
