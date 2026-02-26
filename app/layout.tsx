@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header"; // <-- Ajoute cet import
+import Header from "./components/Header";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
+const outfit = Outfit({ subsets: ["latin"], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
-  title: "Ma Super App de Livres",
-  description: "Découvre et gère tes lectures",
+  title: "BookApp | Next-Gen",
+  description: "Ton hub littéraire intelligent",
 };
 
 export default function RootLayout({
@@ -17,8 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={inter.className}>
-        <Header /> {/* <-- Ajoute le Header ici ! */}
+      {/* Un fond très clair (slate-50) qui fait ressortir le blanc et les couleurs */}
+      <body className={`${inter.variable} ${outfit.variable} font-sans bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-500 selection:text-white`}>
+        <Header />
         {children}
       </body>
     </html>
