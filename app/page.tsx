@@ -19,8 +19,18 @@ export default function HomePage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=10&langRestrict=fr`);
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
+      const url = apiKey 
+        ? `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=10&langRestrict=fr&key=${apiKey}`
+        : `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=10&langRestrict=fr`;
+
+      const response = await fetch(url);
       const data = await response.json();
+      
+      if (data.error) {
+        console.error("Google Books API Error:", data.error.message);
+      }
+
       setBooks(data.items || []);
     } catch (error) {
       console.error("Erreur de recherche:", error);
@@ -51,9 +61,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-50 pt-32 pb-20 px-6 font-sans text-zinc-900 transition-colors duration-500 overflow-hidden relative">
+    <main className="min-h-screen bg-zinc-50 pt-32 pb-20 px-6 font-sans text-zinc-900 transition-colors duration-500 overflow-x-hidden relative">
       
-      {/* Décors flous */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-zinc-200/50 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[40%] bg-zinc-200/30 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -74,7 +83,6 @@ export default function HomePage() {
           Recherchez, organisez et partagez vos œuvres littéraires dans un espace conçu pour les puristes.
         </p>
 
-        {/* Barre de recherche */}
         <form onSubmit={handleSearch} className="relative w-full max-w-2xl mx-auto mb-16 md:mb-24 group">
           <input
             type="text"
@@ -92,7 +100,6 @@ export default function HomePage() {
           </button>
         </form>
 
-        {/* Résultats */}
         {books.length > 0 && (
           <div className="w-full text-left animate-in fade-in slide-in-from-bottom-10 duration-700">
             <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-zinc-400 mb-6 md:mb-8 border-b border-zinc-200 pb-4">Résultats de la recherche</h2>
@@ -115,15 +122,12 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* LA MODALE (Architecture Anti-Casse Mobile) */}
       {selectedBook && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 transition-all">
           <div className="absolute inset-0" onClick={() => setSelectedBook(null)}></div>
           
-          {/* Le conteneur principal : Hauteur stricte sur mobile (h-[85dvh]) pour forcer le footer à rester visible */}
           <div className="relative w-full max-w-3xl bg-white rounded-3xl md:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden h-[85dvh] md:h-auto md:max-h-[85vh] animate-in zoom-in-95 duration-300">
             
-            {/* Bouton Fermer (flottant au-dessus de tout) */}
             <button 
               onClick={() => setSelectedBook(null)}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-zinc-900 shadow-md hover:bg-zinc-100 z-50 transition-colors border border-zinc-200"
@@ -131,10 +135,8 @@ export default function HomePage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            {/* ZONE 1 : LE CONTENU DÉFILABLE (Image + Texte) */}
             <div className="flex-1 overflow-y-auto flex flex-col md:flex-row min-h-0 relative">
               
-              {/* Image : Défile avec le texte sur mobile, mais reste fixe à gauche sur PC */}
               <div className="w-full md:w-2/5 bg-zinc-50 p-6 md:p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-zinc-100 shrink-0">
                 {selectedBook.volumeInfo.imageLinks?.thumbnail ? (
                   <img 
@@ -147,7 +149,6 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Texte : La longue description de One-Punch Man passera sans problème ici */}
               <div className="w-full md:w-3/5 p-6 md:p-8 flex flex-col">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Aperçu de l'œuvre</span>
                 <h2 className="text-2xl md:text-3xl font-black text-zinc-900 mb-2 leading-tight pr-6">{selectedBook.volumeInfo.title}</h2>
@@ -162,7 +163,6 @@ export default function HomePage() {
 
             </div>
 
-            {/* ZONE 2 : LE FOOTER FIXE (Toujours visible en bas) */}
             <div className="shrink-0 bg-white p-4 md:p-6 border-t border-zinc-100 flex flex-col sm:flex-row gap-3 z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
               <button 
                 onClick={() => handleSaveBook(selectedBook)}
