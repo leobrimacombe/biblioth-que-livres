@@ -125,65 +125,70 @@ export default function DiscoverPage() {
 
       </div>
 
-      {/* LA MODALE (Design Verre Dépoli) */}
+      {/* LA MODALE (Architecture Anti-Casse Mobile) */}
       {selectedBook && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/40 backdrop-blur-md p-4 sm:p-6 transition-all">
-          {/* Un clic sur le fond noir ferme la modale */}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 transition-all">
           <div className="absolute inset-0" onClick={() => setSelectedBook(null)}></div>
           
-          <div className="relative w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] animate-in fade-in zoom-in-95 duration-300">
+          {/* Le conteneur principal : Hauteur stricte sur mobile (h-[85dvh]) pour forcer le footer à rester visible */}
+          <div className="relative w-full max-w-3xl bg-white rounded-3xl md:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden h-[85dvh] md:h-auto md:max-h-[85vh] animate-in zoom-in-95 duration-300">
             
+            {/* Bouton Fermer (flottant au-dessus de tout) */}
             <button 
               onClick={() => setSelectedBook(null)}
-              className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-900 transition-colors z-10"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-zinc-900 shadow-md hover:bg-zinc-100 z-50 transition-colors border border-zinc-200"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            {/* Côté Image */}
-            <div className="w-full md:w-2/5 bg-zinc-50 p-8 flex items-center justify-center border-r border-zinc-100">
-              {selectedBook.volumeInfo.imageLinks?.thumbnail ? (
-                <img 
-                  src={selectedBook.volumeInfo.imageLinks.thumbnail.replace('&edge=curl', '')} // Petite astuce pour avoir une image plus nette
-                  alt="Couverture" 
-                  className="w-full max-w-[200px] rounded-xl shadow-[0_20px_40px_rgb(0,0,0,0.15)]"
-                />
-              ) : (
-                 <div className="w-48 h-72 bg-zinc-200 rounded-xl shadow-lg flex items-center justify-center text-xs font-bold uppercase tracking-widest text-zinc-400">Sans Image</div>
-              )}
+            {/* ZONE 1 : LE CONTENU DÉFILABLE (Image + Texte) */}
+            <div className="flex-1 overflow-y-auto flex flex-col md:flex-row min-h-0 relative">
+              
+              {/* Image : Défile avec le texte sur mobile, mais reste fixe à gauche sur PC */}
+              <div className="w-full md:w-2/5 bg-zinc-50 p-6 md:p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-zinc-100 shrink-0">
+                {selectedBook.volumeInfo.imageLinks?.thumbnail ? (
+                  <img 
+                    src={selectedBook.volumeInfo.imageLinks.thumbnail.replace('&edge=curl', '')} 
+                    alt="Couverture" 
+                    className="w-auto h-48 md:h-auto md:max-w-[200px] object-contain rounded-xl shadow-[0_20px_40px_rgb(0,0,0,0.15)]"
+                  />
+                ) : (
+                   <div className="w-32 h-48 md:w-48 md:h-72 bg-zinc-200 rounded-xl shadow-lg flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-zinc-400">Sans Image</div>
+                )}
+              </div>
+
+              {/* Texte : La longue description de One-Punch Man passera sans problème ici */}
+              <div className="w-full md:w-3/5 p-6 md:p-8 flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Aperçu de l'œuvre</span>
+                <h2 className="text-2xl md:text-3xl font-black text-zinc-900 mb-2 leading-tight pr-6">{selectedBook.volumeInfo.title}</h2>
+                <p className="text-xs font-medium text-zinc-500 mb-6">{selectedBook.volumeInfo.authors?.join(', ')}</p>
+                
+                <div className="text-sm leading-relaxed text-zinc-600 pb-4">
+                  {selectedBook.volumeInfo.description 
+                    ? selectedBook.volumeInfo.description 
+                    : <span className="italic text-zinc-400">Aucun synopsis n'a été fourni pour cette édition.</span>}
+                </div>
+              </div>
+
             </div>
 
-            {/* Côté Infos */}
-            <div className="w-full md:w-3/5 p-8 flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-2">Aperçu de l'œuvre</span>
-              <h2 className="text-3xl font-black text-zinc-900 mb-2 leading-tight">{selectedBook.volumeInfo.title}</h2>
-              <p className="text-sm font-medium text-zinc-500 mb-6">{selectedBook.volumeInfo.authors?.join(', ')}</p>
+            {/* ZONE 2 : LE FOOTER FIXE (Toujours visible en bas) */}
+            <div className="shrink-0 bg-white p-4 md:p-6 border-t border-zinc-100 flex flex-col sm:flex-row gap-3 z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+              <button 
+                onClick={() => handleSaveBook(selectedBook)}
+                className="w-full sm:flex-1 rounded-full bg-zinc-900 px-4 py-4 md:py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-zinc-800 active:scale-95"
+              >
+                Ajouter à la collection
+              </button>
               
-              <div className="text-sm leading-relaxed text-zinc-600 mb-8 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-200">
-                {selectedBook.volumeInfo.description 
-                  ? selectedBook.volumeInfo.description 
-                  : <span className="italic text-zinc-400">Aucun synopsis n'a été fourni pour cette édition.</span>}
-              </div>
-
-              {/* Boutons d'action Luxe */}
-              <div className="mt-auto flex flex-col sm:flex-row gap-3">
-                <button 
-                  onClick={() => handleSaveBook(selectedBook)}
-                  className="flex-1 rounded-full bg-zinc-900 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-all duration-500 hover:bg-zinc-800 hover:shadow-lg active:scale-95"
-                >
-                  Ajouter à la collection
-                </button>
-                
-                <a 
-                  href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.volumeInfo.title + " livre " + (selectedBook.volumeInfo.authors?.[0] || ""))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 rounded-full border border-zinc-200 bg-white px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-zinc-900 transition-all duration-500 hover:border-zinc-900 hover:bg-zinc-50 active:scale-95 text-center flex items-center justify-center gap-2"
-                >
-                  Voir l'édition
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </a>
-              </div>
+              <a 
+                href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.volumeInfo.title + " livre " + (selectedBook.volumeInfo.authors?.[0] || ""))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:flex-1 rounded-full border border-zinc-200 bg-white px-4 py-4 md:py-3.5 text-xs font-bold uppercase tracking-widest text-zinc-900 transition-all hover:bg-zinc-50 active:scale-95 text-center flex items-center justify-center"
+              >
+                Voir l'édition
+              </a>
             </div>
 
           </div>
