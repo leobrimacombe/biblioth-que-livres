@@ -84,7 +84,7 @@ export default function Header() {
 
           {/* Navigation Bureau */}
           <nav className="hidden md:flex items-center gap-8">
-            {getNavLink('/', 'Explorateur')}
+            {getNavLink('/search', 'Recherche')}
             {getNavLink('/discover', 'Découverte')}
             {getNavLink('/community', 'Réseau')}
           </nav>
@@ -136,7 +136,7 @@ export default function Header() {
         {/* LE MENU MOBILE (Déroulant) */}
         {isMobileMenuOpen && (
           <div className="pointer-events-auto absolute top-full left-4 right-4 mt-2 bg-white/95 backdrop-blur-3xl border border-zinc-200 shadow-2xl rounded-[2rem] p-3 flex flex-col gap-1 md:hidden animate-in slide-in-from-top-4 fade-in duration-300">
-            {getMobileNavLink('/', 'Explorateur')}
+            {getMobileNavLink('/search', 'Recherche')}
             {getMobileNavLink('/discover', 'Découverte')}
             {getMobileNavLink('/community', 'Réseau')}
             

@@ -22,9 +22,12 @@ export default function LibraryPage() {
       setLoading(false);
       return;
     }
+    
+    // CORRECTION : On demande uniquement les livres où le user_id correspond à mon id !
     const { data, error } = await supabase
       .from('user_books')
       .select('*')
+      .eq('user_id', user.id)
       .order('added_at', { ascending: false });
 
     if (!error && data) setMyBooks(data);
