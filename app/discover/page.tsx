@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from '@supabase/supabase-js';
-import InkButton from '../components/InkButton'; // <-- IMPORT
+import InkButton from '../components/InkButton';
+import { generateBookRecommendations } from '../actions/ai'; // <-- IMPORT DU SERVEUR
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -21,42 +21,11 @@ export default function DiscoverPage() {
 
     setLoading(true);
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("Clé API Gemini introuvable.");
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const systemPrompt = `Tu es un expert littéraire. L'utilisateur cherche des recommandations de livres avec cette envie : "${prompt}". 
-      Renvoie UNIQUEMENT un tableau JSON strict (sans markdown, sans texte avant ou après) contenant 5 livres. 
-      Format exact attendu : [{"title": "Titre", "author": "Auteur", "reason": "Pourquoi ce livre correspond en 1 phrase courte."}]`;
-
-      const result = await model.generateContent(systemPrompt);
-      let responseText = result.response.text().trim();
-      
-      if (responseText.startsWith("```json")) responseText = responseText.replace(/```json/g, "");
-      if (responseText.startsWith("```")) responseText = responseText.replace(/```/g, "");
-      responseText = responseText.trim();
-
-      const jsonResult = JSON.parse(responseText);
-      
-      const enrichedBooks = await Promise.all(jsonResult.map(async (book: any) => {
-        try {
-          const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(book.title)}+inauthor:${encodeURIComponent(book.author)}&maxResults=1`);
-          const gbData = await gbRes.json();
-          if (gbData.items && gbData.items.length > 0) {
-            return { ...book, googleData: gbData.items[0] };
-          }
-          return book;
-        } catch (e) {
-          return book;
-        }
-      }));
-
+      // MAGIE : Le navigateur demande au serveur, et les clés restent secrètes !
+      const enrichedBooks = await generateBookRecommendations(prompt);
       setRecommendations(enrichedBooks);
-    } catch (error) {
-      console.error("Erreur de génération:", error);
-      alert("La machine a eu un hoquet. Veuillez reformuler votre demande.");
+    } catch (error: any) {
+      alert("Erreur : " + error.message);
     } finally {
       setLoading(false);
     }
@@ -113,13 +82,7 @@ export default function DiscoverPage() {
             className="w-full text-base sm:text-lg font-serif italic bg-transparent outline-none resize-none h-32 text-stone-900 placeholder:text-stone-500 mb-6 focus:bg-stone-50 transition-colors p-2"
           />
           <div className="flex justify-end border-t-2 border-stone-900 pt-6">
-            {/* BOUTON ENCRE - IA */}
-            <InkButton
-              type="submit"
-              disabled={loading}
-              isDark={true}
-              className="px-8 py-4 text-xs font-black uppercase tracking-widest flex items-center gap-3"
-            >
+            <InkButton type="submit" disabled={loading} isDark={true} className="px-8 py-4 text-xs font-black uppercase tracking-widest flex items-center gap-3">
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-[#F4F3EE] border-t-transparent rounded-full animate-spin"></div>
@@ -168,10 +131,7 @@ export default function DiscoverPage() {
           
           <div className="relative w-full max-w-4xl paper-card bg-[#FAFAFA] flex flex-col overflow-hidden h-[85dvh] md:h-auto md:max-h-[90vh] animate-in zoom-in-95 duration-200">
             
-            <button 
-              onClick={() => setSelectedBook(null)}
-              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] text-stone-900 z-50"
-            >
+            <button onClick={() => setSelectedBook(null)} className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] text-stone-900 z-50">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
@@ -179,11 +139,7 @@ export default function DiscoverPage() {
               <div className="w-full md:w-2/5 bg-[#F4F3EE] p-6 md:p-10 flex items-center justify-center border-b-4 md:border-b-0 md:border-r-4 border-stone-900 shrink-0 relative">
                  <div className="absolute top-4 border-t-8 border-stone-300 w-16 opacity-50 z-10 rotate-3"></div>
                 {selectedBook.googleData?.volumeInfo?.imageLinks?.thumbnail ? (
-                  <img 
-                    src={selectedBook.googleData.volumeInfo.imageLinks.thumbnail.replace('&edge=curl', '')} 
-                    alt="Couverture" 
-                    className="w-auto h-48 md:h-auto md:max-w-[220px] object-contain paper-card p-2 bg-white"
-                  />
+                  <img src={selectedBook.googleData.volumeInfo.imageLinks.thumbnail.replace('&edge=curl', '')} alt="Couverture" className="w-auto h-48 md:h-auto md:max-w-[220px] object-contain paper-card p-2 bg-white" />
                 ) : (
                    <div className="w-32 h-48 md:w-56 md:h-80 paper-card bg-stone-200 flex items-center justify-center text-xs font-black uppercase tracking-widest text-stone-600">Sans Image</div>
                 )}
@@ -193,35 +149,20 @@ export default function DiscoverPage() {
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2">Recommandation IA</span>
                 <h2 className="text-3xl md:text-4xl font-black text-stone-900 mb-2 leading-none uppercase pr-8">{selectedBook.title}</h2>
                 <p className="text-sm font-bold text-stone-700 mb-6 border-b-2 border-stone-900 pb-4">{selectedBook.author}</p>
-                
                 <div className="bg-[#F4F3EE] p-4 paper-card mb-6 border-l-4 border-stone-900">
                   <p className="text-sm font-serif italic text-stone-800">"{selectedBook.reason}"</p>
                 </div>
-
                 <div className="text-sm leading-relaxed text-stone-800 pb-4 font-medium">
-                  {selectedBook.googleData?.volumeInfo?.description 
-                    ? selectedBook.googleData.volumeInfo.description 
-                    : <span className="italic text-stone-500">Aucun synopsis archivé pour cette édition.</span>}
+                  {selectedBook.googleData?.volumeInfo?.description ? selectedBook.googleData.volumeInfo.description : <span className="italic text-stone-500">Aucun synopsis archivé pour cette édition.</span>}
                 </div>
               </div>
             </div>
 
             <div className="shrink-0 bg-[#F4F3EE] p-4 md:p-6 border-t-4 border-stone-900 flex flex-col sm:flex-row gap-4 z-10">
-              {/* BOUTON ENCRE - AJOUTER */}
-              <InkButton 
-                onClick={() => handleSaveBook(selectedBook)}
-                isDark={true}
-                className="w-full sm:flex-1 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest"
-              >
+              <InkButton onClick={() => handleSaveBook(selectedBook)} isDark={true} className="w-full sm:flex-1 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest">
                 + Ajouter à l'Étui
               </InkButton>
-              
-              <a 
-                href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.title + " livre " + selectedBook.author)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:flex-1 paper-card paper-btn bg-[#FAFAFA] px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest text-stone-900 text-center flex items-center justify-center gap-2"
-              >
+              <a href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.title + " livre " + selectedBook.author)}`} target="_blank" rel="noopener noreferrer" className="w-full sm:flex-1 paper-card paper-btn bg-[#FAFAFA] px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest text-stone-900 text-center flex items-center justify-center gap-2">
                 Consulter l'édition
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
               </a>

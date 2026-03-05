@@ -2,16 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import InkButton from '../components/InkButton'; // <-- IMPORT
+import InkButton from '../components/InkButton';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+type EditMode = 'none' | 'menu' | 'pseudo' | 'email' | 'password';
+
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, read: 0, reading: 0, toRead: 0 });
+  
+  // États pour l'édition du profil
+  const [editMode, setEditMode] = useState<EditMode>('none');
+  const [pseudo, setPseudo] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -22,6 +31,9 @@ export default function ProfilePage() {
     
     if (user) {
       setUser(user);
+      setPseudo(user.user_metadata?.pseudo || '');
+      setEmail(user.email || '');
+      
       const { data, error } = await supabase.from('user_books').select('status').eq('user_id', user.id);
       
       if (!error && data) {
@@ -34,6 +46,39 @@ export default function ProfilePage() {
       }
     }
     setLoading(false);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    const updates: any = {};
+
+    if (editMode === 'pseudo') updates.data = { pseudo: pseudo.trim() };
+    if (editMode === 'email') updates.email = email.trim();
+    if (editMode === 'password') updates.password = password.trim();
+
+    const { data, error } = await supabase.auth.updateUser(updates);
+
+    if (error) {
+      alert("Erreur lors de la mise à jour : " + error.message);
+    } else {
+      setUser(data.user);
+      setEditMode('none');
+      setPassword(''); 
+      
+      if (editMode === 'email') {
+        alert("Dossier mis à jour ! Note : Un lien de confirmation a été envoyé pour valider la nouvelle adresse courriel.");
+      }
+    }
+    setSaving(false);
+  };
+
+  const cancelEditing = () => {
+    setEditMode('none');
+    setPseudo(user?.user_metadata?.pseudo || '');
+    setEmail(user?.email || '');
+    setPassword('');
   };
 
   if (loading) return (
@@ -66,26 +111,113 @@ export default function ProfilePage() {
         </div>
 
         <div className="paper-card bg-[#FAFAFA] p-8 md:p-12 relative overflow-hidden">
-          <div className="absolute top-8 right-8 w-24 h-24 border-4 border-stone-900/20 rounded-full flex items-center justify-center -rotate-12 pointer-events-none">
-            <span className="text-stone-900/20 font-black uppercase tracking-widest text-xs text-center leading-none">Membre<br/>Actif</span>
-          </div>
-
-          <h2 className="text-sm font-black uppercase tracking-widest text-stone-700 mb-8 border-b-4 border-stone-900 pb-2">Informations du membre</h2>
           
-          <div className="space-y-6 mb-12">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Identifiant Unique (ID)</label>
-              <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base break-all">
-                {user.id}
-              </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Courriel Enregistré</label>
-              <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base">
-                {user.email}
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-8 border-b-4 border-stone-900 pb-2">
+            <h2 className="text-sm font-black uppercase tracking-widest text-stone-700">Identité du membre</h2>
+            {editMode === 'none' && (
+              <button onClick={() => setEditMode('menu')} className="text-[10px] font-black uppercase tracking-widest text-stone-500 hover:text-stone-900 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                Modifier
+              </button>
+            )}
           </div>
+          
+          {/* MENU DE SÉLECTION DE MODIFICATION */}
+          {editMode === 'menu' && (
+            <div className="bg-[#F4F3EE] p-6 paper-card mb-12 flex flex-col gap-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Que souhaitez-vous modifier ?</span>
+              <InkButton onClick={() => setEditMode('pseudo')} isDark={false} className="w-full py-4 text-xs font-black uppercase tracking-widest">
+                Pseudonyme Public
+              </InkButton>
+              <InkButton onClick={() => setEditMode('email')} isDark={false} className="w-full py-4 text-xs font-black uppercase tracking-widest">
+                Adresse Courriel
+              </InkButton>
+              <InkButton onClick={() => setEditMode('password')} isDark={false} className="w-full py-4 text-xs font-black uppercase tracking-widest">
+                Mot de Passe
+              </InkButton>
+              <button onClick={cancelEditing} className="mt-4 text-[10px] font-black uppercase tracking-widest text-stone-500 hover:text-stone-900 self-end">
+                Annuler
+              </button>
+            </div>
+          )}
+
+          {/* FORMULAIRES DE MODIFICATION */}
+          {(editMode === 'pseudo' || editMode === 'email' || editMode === 'password') && (
+            <form onSubmit={handleSaveProfile} className="space-y-6 mb-12 bg-[#F4F3EE] p-6 paper-card">
+              
+              {editMode === 'pseudo' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2">Nouveau Pseudonyme</label>
+                  <input
+                    type="text"
+                    value={pseudo}
+                    onChange={(e) => setPseudo(e.target.value)}
+                    placeholder="Ex: LeRatDeBibliothèque"
+                    className="w-full text-base font-serif italic px-4 py-3 bg-[#FAFAFA] paper-card outline-none text-stone-900 placeholder:text-stone-400 focus:shadow-[4px_4px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all"
+                    maxLength={25}
+                    required
+                  />
+                </div>
+              )}
+
+              {editMode === 'email' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2">Nouvelle Adresse Courriel</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="jean.dupont@email.com"
+                    className="w-full text-base font-serif italic px-4 py-3 bg-[#FAFAFA] paper-card outline-none text-stone-900 placeholder:text-stone-400 focus:shadow-[4px_4px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all"
+                    required
+                  />
+                </div>
+              )}
+
+              {editMode === 'password' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-2">Nouveau Mot de Passe</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Tapez le nouveau mot de passe"
+                    className="w-full text-base font-serif italic px-4 py-3 bg-[#FAFAFA] paper-card outline-none text-stone-900 placeholder:text-stone-400 focus:shadow-[4px_4px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4 border-t-2 border-stone-900 border-dashed">
+                <InkButton type="submit" disabled={saving} isDark={true} className="flex-1 py-3 text-xs font-black uppercase tracking-widest">
+                  {saving ? 'Signature...' : 'Enregistrer'}
+                </InkButton>
+                {/* BOUTON ENCRE - ANNULER */}
+                <InkButton type="button" onClick={cancelEditing} isDark={false} className="flex-1 py-3 text-xs font-black uppercase tracking-widest">
+                  Annuler
+                </InkButton>
+              </div>
+            </form>
+          )}
+
+          {/* MODE LECTURE DU PROFIL */}
+          {editMode === 'none' && (
+            <div className="space-y-6 mb-12">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Pseudonyme</label>
+                <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base">
+                  {user.user_metadata?.pseudo ? user.user_metadata.pseudo : <span className="text-stone-400">Non renseigné (Lecteur Anonyme)</span>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Courriel Enregistré (Privé)</label>
+                <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base">
+                  {user.email}
+                </div>
+              </div>
+            </div>
+          )}
 
           <h2 className="text-sm font-black uppercase tracking-widest text-stone-700 mb-8 border-b-4 border-stone-900 pb-2">Bilan de Lecture</h2>
           
@@ -109,7 +241,6 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-12 pt-8 border-t-2 border-stone-900 border-dashed flex justify-center">
-            {/* BOUTON ENCRE - DECONNEXION */}
             <InkButton 
               onClick={() => supabase.auth.signOut()} 
               isDark={true}
