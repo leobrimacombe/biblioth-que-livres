@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
+import InkButton from './InkButton'; // <-- NOTRE NOUVEAU BOUTON !
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -29,32 +30,25 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  // L'EFFET PAPIER DÉCOUPÉ (Fond ET Texte pivotent ensemble)
   const getNavLink = (path: string, label: string) => {
     const isActive = pathname === path;
     return (
       <Link href={path} className="group relative inline-block p-1">
-        {/* C'est ce conteneur global qui se soulève et tourne */}
         <div className={`relative px-4 py-2 transition-all duration-300 origin-bottom-left ${
           isActive 
             ? '-rotate-2 -translate-y-1' 
             : 'group-hover:-rotate-3 group-hover:-translate-y-1'
         }`}>
-          
-          {/* Le fond de la feuille (l'opacité et l'ombre changent) */}
           <div className={`absolute inset-0 border-2 border-stone-900 bg-[#FAFAFA] transition-all duration-300 z-0 ${
             isActive 
               ? 'opacity-100 shadow-[2px_2px_0px_0px_#1c1917]' 
               : 'opacity-0 group-hover:opacity-100 group-hover:shadow-[4px_4px_0px_0px_#1c1917]'
           }`}></div>
-          
-          {/* Le texte posé sur la feuille */}
           <span className={`relative z-10 text-xs font-black uppercase tracking-widest transition-colors ${
             isActive ? 'text-stone-900' : 'text-stone-600 group-hover:text-stone-900'
           }`}>
             {label}
           </span>
-          
         </div>
       </Link>
     );
@@ -68,7 +62,7 @@ export default function Header() {
           
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-stone-900 text-stone-900 flex items-center justify-center font-black text-lg border-2 border-stone-900 transition-transform duration-300 group-hover:-rotate-6">
+              <div className="w-10 h-10 bg-stone-900 text-[#F4F3EE] flex items-center justify-center font-black text-lg border-2 border-stone-900 transition-transform duration-300 group-hover:-rotate-6">
                 B.
               </div>
               <span className="text-sm font-black tracking-[0.2em] uppercase text-stone-900 hidden sm:block">
@@ -87,30 +81,33 @@ export default function Header() {
             <div className="hidden md:flex items-center gap-6">
               {user ? (
                 <>
-                  <Link href="/profile" className="text-xs font-bold uppercase tracking-widest text-stone-800 hover:text-stone-900">
+                  <Link href="/profile" className="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900">
                     Profil
                   </Link>
-                  <Link href="/library" className="paper-card paper-btn px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-stone-900 bg-[#F4F3EE]">
+                  {/* BOUTON ENCRE - MON ETUI */}
+                  <InkButton href="/library" isDark={false} className="px-6 py-2 text-xs font-bold uppercase tracking-widest">
                     Mon Étui
-                  </Link>
-                  <button onClick={() => supabase.auth.signOut()} className="text-stone-700 hover:text-stone-900" title="Se déconnecter">
+                  </InkButton>
+                  <button onClick={() => supabase.auth.signOut()} className="text-stone-400 hover:text-stone-900" title="Se déconnecter">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                   </button>
                 </>
               ) : (
-                <button onClick={() => setIsAuthModalOpen(true)} className="paper-card paper-btn bg-stone-900 text-stone-900 px-8 py-3 text-xs font-bold uppercase tracking-widest">
+                /* BOUTON ENCRE - S'IDENTIFIER */
+                <InkButton onClick={() => setIsAuthModalOpen(true)} isDark={true} className="px-8 py-3 text-xs font-bold uppercase tracking-widest">
                   S'identifier
-                </button>
+                </InkButton>
               )}
             </div>
 
             <div className="flex md:hidden items-center gap-3">
               {!user && (
-                <button onClick={() => setIsAuthModalOpen(true)} className="paper-card paper-btn bg-stone-900 text-stone-900 px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
+                /* BOUTON ENCRE - LOGIN MOBILE */
+                <InkButton onClick={() => setIsAuthModalOpen(true)} isDark={true} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
                   Login
-                </button>
+                </InkButton>
               )}
-              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="paper-card paper-btn p-2 text-stone-900 bg-[#F4F3EE]">
+              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="paper-card paper-btn p-2 text-stone-900 bg-[#FAFAFA]">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}></path>
                 </svg>
@@ -139,13 +136,13 @@ export default function Header() {
           <div className="absolute inset-0" onClick={() => setIsAuthModalOpen(false)}></div>
           
           <div className="relative w-full max-w-md paper-card p-10 animate-in zoom-in-95 duration-200">
-            <button onClick={() => setIsAuthModalOpen(false)} className="absolute top-0 right-0 w-12 h-12 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] -translate-y-4 translate-x-4">
+            <button onClick={() => setIsAuthModalOpen(false)} className="absolute top-0 right-0 w-12 h-12 flex items-center justify-center paper-card paper-btn bg-[#FAFAFA] -translate-y-4 translate-x-4">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
             <div className="text-center mb-8 border-b-2 border-stone-900 pb-6">
               <h2 className="text-3xl font-black text-stone-900 tracking-tight uppercase">Registre</h2>
-              <p className="text-xs font-bold uppercase tracking-widest text-stone-800 mt-2">Signez le registre pour entrer</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-stone-500 mt-2">Signez le registre pour entrer</p>
             </div>
 
             <div className="auth-container brutalist-auth">
@@ -157,8 +154,8 @@ export default function Header() {
                     default: { colors: { brand: '#1c1917', brandAccent: '#292524' }, radii: { borderRadiusButton: '0px', buttonBorderRadius: '0px', inputBorderRadius: '0px' } },
                   },
                   className: {
-                    button: 'uppercase tracking-widest text-xs font-bold border-2 border-stone-900 shadow-[4px_4px_0_0_#1c1917] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0_0_#1c1917] transition-all',
-                    input: 'bg-transparent border-2 border-stone-900 focus:border-stone-900 focus:ring-0 rounded-none shadow-[4px_4px_0_0_rgba(28,25,23,0.1)]',
+                    button: 'uppercase tracking-widest text-xs font-bold border-2 border-stone-900 shadow-[4px_4px_0_0_#1c1917] hover:translate-y-[2px] hover:translate-x-[2px] hover:shadow-[2px_2px_0_0_#1c1917] transition-all bg-stone-900 text-[#F4F3EE]',
+                    input: 'bg-[#FAFAFA] border-2 border-stone-900 focus:border-stone-900 focus:ring-0 rounded-none shadow-[4px_4px_0_0_rgba(28,25,23,0.1)] text-stone-900',
                   }
                 }}
                 providers={[]}

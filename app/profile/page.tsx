@@ -2,139 +2,124 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import InkButton from '../components/InkButton'; // <-- IMPORT
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function ProfilePage() {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [username, setUsername] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [saveMessage, setSaveMessage] = useState("");
+  const [stats, setStats] = useState({ total: 0, read: 0, reading: 0, toRead: 0 });
 
   useEffect(() => {
-    loadProfile();
+    fetchUserData();
   }, []);
 
-  const loadProfile = async () => {
+  const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    
     if (user) {
-      setUserEmail(user.email || "");
-      const { data } = await supabase.from('profiles').select('username, is_public').eq('id', user.id).single();
-      if (data) {
-        setUsername(data.username || "");
-        setIsPublic(data.is_public || false);
+      setUser(user);
+      const { data, error } = await supabase.from('user_books').select('status').eq('user_id', user.id);
+      
+      if (!error && data) {
+        setStats({
+          total: data.length,
+          read: data.filter(b => b.status === 'read').length,
+          reading: data.filter(b => b.status === 'reading').length,
+          toRead: data.filter(b => b.status === 'to_read').length,
+        });
       }
     }
     setLoading(false);
   };
 
-  const saveProfile = async () => {
-    setSaving(true);
-    setSaveMessage("");
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user) {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ username, is_public: isPublic })
-        .eq('id', user.id);
-
-      if (error) {
-        setSaveMessage("Erreur lors de la sauvegarde.");
-      } else {
-        setSaveMessage("Modifications enregistrées avec succès.");
-        // Efface le message après 3 secondes
-        setTimeout(() => setSaveMessage(""), 3000);
-      }
-    }
-    setSaving(false);
-  };
-
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-      <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
+    <div className="min-h-screen flex items-center justify-center bg-[#F4F3EE]">
+      <div className="w-8 h-8 border-4 border-stone-900 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  if (!user) return (
+    <div className="min-h-screen bg-[#F4F3EE] pt-32 px-6 flex flex-col items-center text-center font-sans">
+      <h1 className="text-4xl font-black text-stone-900 uppercase mb-6">Accès Refusé</h1>
+      <p className="text-stone-700 font-bold mb-8">Vous devez signer le registre pour voir votre dossier.</p>
+      <InkButton href="/" isDark={true} className="px-8 py-4 font-black uppercase tracking-widest text-xs">
+        Retour à l'accueil
+      </InkButton>
     </div>
   );
 
   return (
-    <main className="min-h-screen bg-zinc-50 pt-32 pb-20 px-6 font-sans text-zinc-900 transition-colors duration-500">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen bg-[#F4F3EE] pt-28 sm:pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-[#F4F3EE]">
+      <div className="max-w-3xl mx-auto">
         
-        {/* En-tête de la page */}
-        <div className="flex flex-col items-start mb-12">
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-2">Paramètres du compte</span>
-          <h1 className="text-5xl font-black tracking-tight text-zinc-900">
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="paper-card px-4 py-2 mb-4 -rotate-2 inline-block bg-[#FAFAFA]">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em] text-stone-900">Dossier Confidentiel</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight text-stone-900 mb-4 uppercase">
             Mon Profil.
           </h1>
         </div>
 
-        {/* Conteneur principal façon carte de luxe */}
-        <div className="bg-white rounded-[2rem] p-8 sm:p-12 border border-zinc-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col gap-10 relative overflow-hidden">
+        <div className="paper-card bg-[#FAFAFA] p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute top-8 right-8 w-24 h-24 border-4 border-stone-900/20 rounded-full flex items-center justify-center -rotate-12 pointer-events-none">
+            <span className="text-stone-900/20 font-black uppercase tracking-widest text-xs text-center leading-none">Membre<br/>Actif</span>
+          </div>
+
+          <h2 className="text-sm font-black uppercase tracking-widest text-stone-700 mb-8 border-b-4 border-stone-900 pb-2">Informations du membre</h2>
           
-          {/* Notification de sauvegarde flottante */}
-          {saveMessage && (
-            <div className="absolute top-0 left-0 right-0 bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest text-center py-3 animate-in slide-in-from-top duration-300">
-              {saveMessage}
-            </div>
-          )}
-
-          {/* Section Identité */}
-          <div className="flex flex-col gap-6 pt-4">
+          <div className="space-y-6 mb-12">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Adresse Email (Privée)</label>
-              <input 
-                type="text" 
-                disabled 
-                value={userEmail} 
-                className="w-full text-sm font-medium px-6 py-4 bg-zinc-50 rounded-2xl border border-transparent text-zinc-400 cursor-not-allowed" 
-              />
+              <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Identifiant Unique (ID)</label>
+              <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base break-all">
+                {user.id}
+              </div>
             </div>
-
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-3">Pseudonyme Public</label>
-              <input 
-                type="text" 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-                placeholder="Ex: LeLecteurAnonyme"
-                className="w-full text-sm font-medium px-6 py-4 bg-zinc-50 rounded-2xl border border-transparent focus:bg-white focus:border-zinc-200 focus:ring-4 focus:ring-zinc-100 outline-none text-zinc-900 transition-all duration-500" 
-              />
-              <p className="text-xs text-zinc-400 mt-3 font-medium">Ce nom sera visible par les autres membres du réseau.</p>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-stone-700 mb-1">Courriel Enregistré</label>
+              <div className="font-serif italic text-stone-900 bg-[#F4F3EE] p-3 paper-card text-sm md:text-base">
+                {user.email}
+              </div>
             </div>
           </div>
 
-          <hr className="border-zinc-100" />
-
-          {/* Section Confidentialité avec Switch iOS Noir & Blanc */}
-          <div className="flex items-center justify-between group cursor-pointer" onClick={() => setIsPublic(!isPublic)}>
-            <div className="pr-8">
-              <h3 className="text-sm font-bold text-zinc-900 mb-1">Rendre ma collection publique</h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                Autorise la communauté à consulter votre bibliothèque et vos évaluations.
-              </p>
+          <h2 className="text-sm font-black uppercase tracking-widest text-stone-700 mb-8 border-b-4 border-stone-900 pb-2">Bilan de Lecture</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[#F4F3EE] paper-card p-4 text-center">
+              <span className="block text-3xl font-black text-stone-900 mb-1">{stats.total}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">Total Fiches</span>
             </div>
-            
-            {/* Le Switch Custom */}
-            <div className="relative inline-flex items-center flex-shrink-0">
-              <div className={`w-14 h-8 rounded-full transition-colors duration-300 ease-in-out ${isPublic ? 'bg-zinc-900' : 'bg-zinc-200'}`}></div>
-              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.19,1,0.22,1)] ${isPublic ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            <div className="bg-[#F4F3EE] paper-card p-4 text-center">
+              <span className="block text-3xl font-black text-stone-900 mb-1">{stats.read}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">Terminés</span>
+            </div>
+            <div className="bg-[#F4F3EE] paper-card p-4 text-center">
+              <span className="block text-3xl font-black text-stone-900 mb-1">{stats.reading}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">En Cours</span>
+            </div>
+            <div className="bg-[#F4F3EE] paper-card p-4 text-center">
+              <span className="block text-3xl font-black text-stone-900 mb-1">{stats.toRead}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">À Lire</span>
             </div>
           </div>
 
-          {/* Bouton de sauvegarde */}
-          <button 
-            onClick={saveProfile}
-            disabled={saving}
-            className="w-full rounded-full bg-zinc-900 px-8 py-5 text-xs font-bold uppercase tracking-widest text-white transition-all duration-500 hover:bg-zinc-800 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center mt-2"
-          >
-            {saving ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : "Enregistrer les modifications"}
-          </button>
-
+          <div className="mt-12 pt-8 border-t-2 border-stone-900 border-dashed flex justify-center">
+            {/* BOUTON ENCRE - DECONNEXION */}
+            <InkButton 
+              onClick={() => supabase.auth.signOut()} 
+              isDark={true}
+              className="px-8 py-3 text-xs font-black uppercase tracking-widest"
+            >
+              Fermer le dossier (Déconnexion)
+            </InkButton>
+          </div>
         </div>
+
       </div>
     </main>
   );

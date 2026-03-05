@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import InkButton from '../components/InkButton'; // <-- IMPORT
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -65,10 +65,9 @@ export default function LibraryPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#F4F3EE] pt-28 sm:pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-stone-900">
+    <main className="min-h-screen bg-[#F4F3EE] pt-28 sm:pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-[#F4F3EE]">
       <div className="max-w-5xl mx-auto">
         
-        {/* En-tête de la page */}
         <div className="flex flex-col items-start mb-10 sm:mb-16">
           <div className="paper-card px-4 py-2 mb-4 -rotate-1 inline-block bg-[#FAFAFA]">
             <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-stone-900">
@@ -82,17 +81,17 @@ export default function LibraryPage() {
 
         {myBooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 sm:py-32 paper-card bg-[#FAFAFA] text-center p-6 border-dashed border-4 border-stone-300">
-            <span className="text-sm font-bold text-stone-800 mb-8 uppercase tracking-widest">Votre étui est vide.</span>
-            <Link href="/search" className="paper-card paper-btn bg-stone-900 text-stone-900 px-8 py-4 text-xs font-black uppercase tracking-widest">
+            <span className="text-sm font-bold text-stone-500 mb-8 uppercase tracking-widest">Votre étui est vide.</span>
+            {/* BOUTON ENCRE - VIDE */}
+            <InkButton href="/search" isDark={true} className="px-8 py-4 text-xs font-black uppercase tracking-widest">
               Feuilleter l'Index
-            </Link>
+            </InkButton>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10">
             {myBooks.map((book) => (
               <div key={book.id} className="paper-card bg-[#FAFAFA] p-5 sm:p-6 flex flex-col relative group">
                 
-                {/* Bouton Supprimer façon rature */}
                 <button 
                   onClick={() => handleDelete(book.id)}
                   className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 flex items-center justify-center paper-card paper-btn bg-red-50 text-red-600 border-red-900 z-10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100"
@@ -102,12 +101,11 @@ export default function LibraryPage() {
                 </button>
 
                 <div className="flex gap-4 sm:gap-6 mb-4 sm:mb-6">
-                  {/* Couverture du livre */}
                   <div className="w-24 sm:w-32 flex-shrink-0">
                     {book.cover_url ? (
                       <img src={book.cover_url} alt={book.title} className="w-full paper-card p-1 bg-white" />
                     ) : (
-                      <div className="w-full h-36 sm:h-48 paper-card bg-stone-200 flex items-center justify-center text-[10px] font-black uppercase tracking-wider text-stone-800 text-center p-2">Sans Image</div>
+                      <div className="w-full h-36 sm:h-48 paper-card bg-stone-200 flex items-center justify-center text-[10px] font-black uppercase tracking-wider text-stone-500 text-center p-2">Sans Image</div>
                     )}
                   </div>
                   
@@ -115,7 +113,6 @@ export default function LibraryPage() {
                     <h3 className="font-black text-lg sm:text-xl leading-snug mb-2 text-stone-900 uppercase border-b-2 border-stone-900 pb-2">{book.title}</h3>
                     <p className="text-xs sm:text-sm font-bold text-stone-600 mb-6">{book.author}</p>
                     
-                    {/* Sélecteur de statut Brutaliste */}
                     <div className="mt-auto relative w-full sm:w-max">
                       <select 
                         value={book.status} 
@@ -133,9 +130,8 @@ export default function LibraryPage() {
                   </div>
                 </div>
 
-                {/* Section Évaluation */}
                 <div className="mt-2 pt-4 sm:pt-5 border-t-2 border-stone-900 border-dashed flex items-center justify-between">
-                  <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${book.status === 'read' ? 'text-stone-900' : 'text-stone-700'}`}>
+                  <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest ${book.status === 'read' ? 'text-stone-900' : 'text-stone-400'}`}>
                     Évaluation
                   </span>
                   <div className="flex gap-1 sm:gap-2">
@@ -154,7 +150,6 @@ export default function LibraryPage() {
                   </div>
                 </div>
 
-                {/* Champ de notes "Machine à écrire" */}
                 {book.status === 'read' && (
                   <div className="mt-6">
                     <textarea
@@ -162,7 +157,7 @@ export default function LibraryPage() {
                       value={book.notes || ''}
                       onChange={(e) => handleLocalNotesChange(book.id, e.target.value)}
                       onBlur={(e) => saveNotesToDB(book.id, e.target.value)}
-                      className="w-full text-xs sm:text-sm font-medium p-4 bg-[#F4F3EE] paper-card outline-none resize-none h-24 text-stone-900 placeholder:text-stone-700 focus:shadow-[2px_2px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all font-serif italic"
+                      className="w-full text-xs sm:text-sm font-medium p-4 bg-[#F4F3EE] paper-card outline-none resize-none h-24 text-stone-900 placeholder:text-stone-400 focus:shadow-[2px_2px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all font-serif italic"
                     />
                   </div>
                 )}

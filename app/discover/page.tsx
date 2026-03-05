@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from '@supabase/supabase-js';
+import InkButton from '../components/InkButton'; // <-- IMPORT
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -83,11 +84,11 @@ export default function DiscoverPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F4F3EE] pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-stone-900 overflow-x-hidden">
+    <main className="min-h-screen bg-[#F4F3EE] pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-[#F4F3EE] overflow-x-hidden">
       <div className="max-w-4xl mx-auto">
         
         <div className="flex flex-col items-center text-center mb-16">
-          <div className="paper-card px-4 py-2 mb-4 rotate-2 inline-block bg-stone-900 text-stone-900">
+          <div className="paper-card px-4 py-2 mb-4 rotate-2 inline-block bg-stone-900 text-[#F4F3EE]">
             <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em]">Service Automatisé</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tight text-stone-900 mb-6 uppercase">
@@ -112,18 +113,20 @@ export default function DiscoverPage() {
             className="w-full text-base sm:text-lg font-serif italic bg-transparent outline-none resize-none h-32 text-stone-900 placeholder:text-stone-500 mb-6 focus:bg-stone-50 transition-colors p-2"
           />
           <div className="flex justify-end border-t-2 border-stone-900 pt-6">
-            <button
+            {/* BOUTON ENCRE - IA */}
+            <InkButton
               type="submit"
               disabled={loading}
-              className="paper-card paper-btn bg-stone-900 px-8 py-4 text-xs font-black uppercase tracking-widest text-stone-900 flex items-center gap-3"
+              isDark={true}
+              className="px-8 py-4 text-xs font-black uppercase tracking-widest flex items-center gap-3"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-[#F4F3EE] border-t-transparent rounded-full animate-spin"></div>
-                  Recherche dans les archives...
+                  Recherche...
                 </>
               ) : "Lancer la recherche"}
-            </button>
+            </InkButton>
           </div>
         </form>
 
@@ -204,12 +207,14 @@ export default function DiscoverPage() {
             </div>
 
             <div className="shrink-0 bg-[#F4F3EE] p-4 md:p-6 border-t-4 border-stone-900 flex flex-col sm:flex-row gap-4 z-10">
-              <button 
+              {/* BOUTON ENCRE - AJOUTER */}
+              <InkButton 
                 onClick={() => handleSaveBook(selectedBook)}
-                className="w-full sm:flex-1 paper-card paper-btn bg-stone-900 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest text-stone-900"
+                isDark={true}
+                className="w-full sm:flex-1 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest"
               >
                 + Ajouter à l'Étui
-              </button>
+              </InkButton>
               
               <a 
                 href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.title + " livre " + selectedBook.author)}`}

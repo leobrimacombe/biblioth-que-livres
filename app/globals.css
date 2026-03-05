@@ -41,23 +41,25 @@ a, button, select, input {
   cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%231c1917" stroke="%231c1917" stroke-width="2"><circle cx="12" cy="12" r="5"></circle></svg>') 12 12, pointer !important;
 }
 
-/* La classe magique "Feuille de papier empilée" */
-.paper-card {
-  background-color: #FAFAFA; /* Blanc papier */
-  border: 2px solid #1c1917; /* Bordure d'encre noire */
-  box-shadow: 6px 6px 0px 0px #1c1917; /* L'ombre dure caractéristique du papier */
-  border-radius: 2px; /* Très légèrement arrondi pour pas être tranchant, comme un vrai carnet */
-  transition: all 0.2s ease-out;
-}
+@layer components {
+  /* La classe magique "Feuille de papier empilée" */
+  .paper-card {
+    background-color: #FAFAFA;
+    border: 2px solid #1c1917;
+    box-shadow: 6px 6px 0px 0px #1c1917;
+    border-radius: 2px;
+    transition: all 0.2s ease-out;
+  }
 
-/* L'effet quand on clique sur une feuille (elle s'enfonce) */
-.paper-btn:active {
-  box-shadow: 0px 0px 0px 0px #1c1917;
-  transform: translate(6px, 6px);
-}
+  /* L'effet quand on clique sur une feuille (elle s'enfonce) */
+  .paper-btn:active {
+    box-shadow: 0px 0px 0px 0px #1c1917;
+    transform: translate(6px, 6px);
+  }
 
-/* L'effet quand on survole une feuille (elle se soulève) */
-.paper-hover:hover {
-  box-shadow: 8px 8px 0px 0px #1c1917;
-  transform: translate(-2px, -2px);
+  /* L'effet quand on survole une feuille (elle se soulève) */
+  .paper-hover:hover {
+    box-shadow: 8px 8px 0px 0px #1c1917;
+    transform: translate(-2px, -2px);
+  }
 }

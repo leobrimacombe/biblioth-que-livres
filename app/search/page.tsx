@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import InkButton from '../components/InkButton'; // <-- IMPORT DU BOUTON MAGIQUE
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -59,7 +60,7 @@ export default function SearchPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F4F3EE] pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-stone-900">
+    <main className="min-h-screen bg-[#F4F3EE] pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-[#F4F3EE]">
       <div className="max-w-5xl mx-auto">
         
         <div className="flex flex-col items-center text-center mb-12">
@@ -80,13 +81,15 @@ export default function SearchPage() {
               placeholder="Titre, auteur, mot-clé..."
               className="w-full text-sm md:text-base font-bold px-6 py-5 pr-32 md:pr-40 bg-[#FAFAFA] paper-card outline-none placeholder:text-stone-500 focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1c1917] transition-all text-stone-900"
             />
-            <button
+            {/* BOUTON ENCRE - CHERCHER */}
+            <InkButton
               type="submit"
               disabled={loading}
-              className="absolute right-2 top-2 bottom-2 paper-card paper-btn bg-stone-900 px-6 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-900 flex items-center justify-center"
+              isDark={true}
+              className="absolute right-2 top-2 bottom-2 px-6 md:px-8 text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center justify-center"
             >
               {loading ? <div className="w-4 h-4 border-2 border-[#F4F3EE] border-t-transparent rounded-full animate-spin"></div> : "Chercher"}
-            </button>
+            </InkButton>
           </form>
 
           <div className="flex justify-end items-center gap-3">
@@ -167,12 +170,14 @@ export default function SearchPage() {
             </div>
 
             <div className="shrink-0 bg-[#F4F3EE] p-4 md:p-6 border-t-4 border-stone-900 flex flex-col sm:flex-row gap-4 z-10">
-              <button 
+              {/* BOUTON ENCRE - AJOUTER */}
+              <InkButton 
                 onClick={() => handleSaveBook(selectedBook)}
-                className="w-full sm:flex-1 paper-card paper-btn bg-stone-900 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest text-stone-900"
+                isDark={true}
+                className="w-full sm:flex-1 px-4 py-4 md:py-4 text-xs font-black uppercase tracking-widest"
               >
                 + Ajouter à l'Étui
-              </button>
+              </InkButton>
               
               <a 
                 href={`https://www.amazon.fr/s?k=${encodeURIComponent(selectedBook.volumeInfo.title + " livre " + (selectedBook.volumeInfo.authors?.[0] || ""))}`}
