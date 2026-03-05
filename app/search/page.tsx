@@ -14,25 +14,57 @@ export default function SearchPage() {
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState<any | null>(null);
+  
+  // NOUVEAU : État pour savoir quelle API on utilise actuellement
+  const [apiSource, setApiSource] = useState<'google' | 'openlibrary'>('google');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
     setLoading(true);
+    setApiSource('google'); // On tente toujours Google en premier
+    
     try {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-      const url = apiKey 
+      const googleUrl = apiKey 
         ? `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=${maxResults}&langRestrict=fr&key=${apiKey}`
         : `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=${maxResults}&langRestrict=fr`;
 
-      const response = await fetch(url);
+      const response = await fetch(googleUrl);
       const data = await response.json();
       
-      if (data.error) console.error("Google Books API Error:", data.error.message);
-      setBooks(data.items || []);
+      // SI GOOGLE NOUS BLOQUE (Erreur de quota ou autre)
+      if (data.error || !response.ok) {
+        console.warn("Google API saturée ou en erreur. Basculement vers Open Library...");
+        setApiSource('openlibrary'); // On prévient l'UI qu'on a changé de source
+
+        // PLAN B : RECHERCHE OPEN LIBRARY
+        const openUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&limit=${maxResults}`;
+        const openResponse = await fetch(openUrl);
+        const openData = await openResponse.json();
+
+        // On déguise les données d'Open Library au format Google pour ne rien casser
+        const fallbackBooks = (openData.docs || []).map((doc: any) => ({
+          id: doc.key ? doc.key.replace('/works/', '') : Math.random().toString(),
+          volumeInfo: {
+            title: doc.title,
+            authors: doc.author_name || ['Auteur inconnu'],
+            description: doc.first_sentence ? (typeof doc.first_sentence === 'string' ? doc.first_sentence : doc.first_sentence.value) : "Aucun synopsis archivé pour cette édition.",
+            imageLinks: {
+              thumbnail: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null
+            }
+          }
+        }));
+
+        setBooks(fallbackBooks);
+      } else {
+        // SI TOUT VA BIEN AVEC GOOGLE
+        setBooks(data.items || []);
+      }
     } catch (error) {
       console.error("Erreur de recherche:", error);
+      alert("Impossible de contacter les archives. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -91,6 +123,15 @@ export default function SearchPage() {
               {loading ? <div className="w-4 h-4 border-2 border-[#F4F3EE] border-t-transparent rounded-full animate-spin"></div> : "Chercher"}
             </InkButton>
           </form>
+
+          {/* BANNIÈRE DE FALLBACK (S'affiche uniquement si Google a planté) */}
+          {apiSource === 'openlibrary' && (
+            <div className="mb-6 paper-card bg-amber-50 border-2 border-stone-900 p-3 text-center animate-in slide-in-from-top-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-700">
+                ⚠️ Trafic élevé : Basculement sur l'archive publique (Open Library).
+              </span>
+            </div>
+          )}
 
           <div className="flex justify-end items-center gap-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-stone-700">Afficher :</label>

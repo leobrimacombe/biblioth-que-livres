@@ -25,7 +25,7 @@ export default function Auth() {
     });
 
     if (error) setMessage(`❌ Erreur : ${error.message}`);
-    else setMessage('✅ Inscription réussie ! (Vérifie tes emails si besoin)');
+    else setMessage('✅ Inscription réussie !');
     setLoading(false);
   };
 

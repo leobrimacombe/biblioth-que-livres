@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import InkButton from './InkButton'; // <-- NOTRE NOUVEAU BOUTON !
+import InkButton from './InkButton';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -84,16 +84,15 @@ export default function Header() {
                   <Link href="/profile" className="text-xs font-bold uppercase tracking-widest text-stone-500 hover:text-stone-900">
                     Profil
                   </Link>
-                  {/* BOUTON ENCRE - MON ETUI */}
+                  {/* === C'EST ICI QUE ÇA SE PASSAIT POUR L'ORDINATEUR ! === */}
                   <InkButton href="/library" isDark={false} className="px-6 py-2 text-xs font-bold uppercase tracking-widest">
-                    Mon Étui
+                    Ma Bibliothèque
                   </InkButton>
                   <button onClick={() => supabase.auth.signOut()} className="text-stone-400 hover:text-stone-900" title="Se déconnecter">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                   </button>
                 </>
               ) : (
-                /* BOUTON ENCRE - S'IDENTIFIER */
                 <InkButton onClick={() => setIsAuthModalOpen(true)} isDark={true} className="px-8 py-3 text-xs font-bold uppercase tracking-widest">
                   S'identifier
                 </InkButton>
@@ -102,7 +101,6 @@ export default function Header() {
 
             <div className="flex md:hidden items-center gap-3">
               {!user && (
-                /* BOUTON ENCRE - LOGIN MOBILE */
                 <InkButton onClick={() => setIsAuthModalOpen(true)} isDark={true} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest">
                   Login
                 </InkButton>
@@ -116,6 +114,7 @@ export default function Header() {
           </div>
         </header>
 
+        {/* MENU MOBILE */}
         {isMobileMenuOpen && (
           <div className="pointer-events-auto absolute top-full left-4 right-4 mt-4 paper-card p-4 flex flex-col gap-2 md:hidden animate-in slide-in-from-top-4 duration-300">
             <Link href="/search" className="p-4 font-bold uppercase tracking-widest text-xs border-b border-stone-200">Index</Link>
@@ -131,6 +130,7 @@ export default function Header() {
         )}
       </div>
 
+      {/* MODALE DE CONNEXION */}
       {isAuthModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/20 backdrop-blur-sm p-4">
           <div className="absolute inset-0" onClick={() => setIsAuthModalOpen(false)}></div>

@@ -376,15 +376,24 @@ export default function LibraryPage() {
                   </div>
               </div>
 
-              <div className="absolute inset-0 bg-[#FAFAFA] paper-card flex flex-col items-center justify-center p-4 md:p-8" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+              <div className="absolute inset-0 bg-[#FAFAFA] paper-card flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 {selectedBook.cover_url ? (
-                  <img src={selectedBook.cover_url} alt="Couverture" className="w-auto max-w-[90%] max-h-[80%] md:max-h-[90%] object-contain paper-card p-1 md:p-2 bg-white shadow-xl" />
+                  <img 
+                    src={selectedBook.cover_url.replace('http:', 'https:').replace('&edge=curl', '')} 
+                    alt="Couverture" 
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                    onError={(e) => {
+                      // Si le lien est mort, on affiche un fond gris à la place de l'icône cassée
+                      e.currentTarget.style.opacity = '0';
+                      e.currentTarget.parentElement?.classList.add('bg-stone-200');
+                    }}
+                  />
                 ) : (
                   <div className="w-full h-full border-4 border-stone-900/20 flex flex-col items-center justify-center p-6 relative bg-[#E8E6E1]">
                     <span className="text-2xl md:text-4xl font-black text-stone-900/20 uppercase -rotate-12 text-center">Sans Image</span>
                   </div>
                 )}
-                <span className="absolute bottom-2 md:bottom-4 right-2 md:right-4 text-[6px] md:text-[10px] font-black uppercase tracking-widest text-stone-400">N° {selectedBook.id.slice(0,8)}</span>
+                <span className="absolute bottom-2 right-2 text-[6px] font-black uppercase tracking-widest text-stone-400">N° {selectedBook.id.slice(0,8)}</span>
               </div>
             </div>
 
