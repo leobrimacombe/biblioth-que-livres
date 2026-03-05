@@ -123,7 +123,7 @@ export default function Header() {
             <Link href="/community" className="p-4 font-bold uppercase tracking-widest text-xs border-b border-stone-200">Le Club</Link>
             {user && (
               <>
-                <Link href="/library" className="p-4 font-bold uppercase tracking-widest text-xs border-b border-stone-200 bg-stone-100">Mon Étui</Link>
+                <Link href="/library" className="p-4 font-bold uppercase tracking-widest text-xs border-b border-stone-200 bg-stone-100">Ma Bibliothèque</Link>
                 <button onClick={() => supabase.auth.signOut()} className="p-4 font-bold uppercase tracking-widest text-xs text-left w-full hover:bg-stone-50">Se déconnecter</button>
               </>
             )}

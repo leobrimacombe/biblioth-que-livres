@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import InkButton from '../components/InkButton';
 import { generateBookRecommendations } from '../actions/ai'; // <-- IMPORT DU SERVEUR
@@ -10,10 +10,24 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function DiscoverPage() {
+  // 1. Nouveaux états pour gérer la sécurité de la page
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   const [prompt, setPrompt] = useState('');
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState<any | null>(null);
+
+  // 2. Vérification de l'identité au chargement
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+      setAuthLoading(false);
+    };
+    checkUser();
+  }, []);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +66,32 @@ export default function DiscoverPage() {
     else setSelectedBook(null);
   };
 
+  // 3. Écran de chargement pendant qu'on vérifie les clés
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F4F3EE]">
+      <div className="w-8 h-8 border-4 border-stone-900 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  // 4. LE VIDEUR : Écran affiché si l'utilisateur n'est pas connecté
+  if (!currentUser) return (
+    <div className="min-h-screen bg-[#F4F3EE] flex flex-col items-center justify-center text-center px-4 sm:px-6 font-sans selection:bg-stone-900 selection:text-[#F4F3EE]">
+      <div className="paper-card px-4 py-2 mb-6 -rotate-2 inline-block bg-stone-900 text-[#F4F3EE]">
+        <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em]">Accès Restreint</span>
+      </div>
+      <h1 className="text-5xl md:text-7xl font-black tracking-tight text-stone-900 mb-6 uppercase">
+        Identifiez-vous.
+      </h1>
+      <p className="text-sm font-bold text-stone-700 max-w-md mx-auto mb-8">
+        Vous devez être connecté pour accéder aux fonctionnalités IA. Veuillez vous identifier pour lui confier vos requêtes.
+      </p>
+      <InkButton href="/" isDark={true} className="px-8 py-4 text-xs font-black uppercase tracking-widest">
+        Retourner à l'accueil
+      </InkButton>
+    </div>
+  );
+
+  // 5. La page normale si l'utilisateur est connecté
   return (
     <main className="min-h-screen bg-[#F4F3EE] pt-32 pb-20 px-4 sm:px-6 font-sans text-stone-900 selection:bg-stone-900 selection:text-[#F4F3EE] overflow-x-hidden">
       <div className="max-w-4xl mx-auto">

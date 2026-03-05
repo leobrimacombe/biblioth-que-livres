@@ -14,7 +14,8 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, read: 0, reading: 0, toRead: 0 });
-  
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   // États pour l'édition du profil
   const [editMode, setEditMode] = useState<EditMode>('none');
   const [pseudo, setPseudo] = useState('');
@@ -28,6 +29,7 @@ export default function ProfilePage() {
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUser(user);
     
     if (user) {
       setUser(user);
@@ -84,6 +86,22 @@ export default function ProfilePage() {
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F4F3EE]">
       <div className="w-8 h-8 border-4 border-stone-900 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+  if (!currentUser) return (
+    <div className="min-h-screen bg-[#F4F3EE] flex flex-col items-center justify-center text-center px-4 sm:px-6 font-sans selection:bg-stone-900 selection:text-[#F4F3EE]">
+      <div className="paper-card px-4 py-2 mb-6 -rotate-2 inline-block bg-stone-900 text-[#F4F3EE]">
+        <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.4em]">Zone Privée</span>
+      </div>
+      <h1 className="text-5xl md:text-7xl font-black tracking-tight text-stone-900 mb-6 uppercase">
+        Accès Refusé.
+      </h1>
+      <p className="text-sm font-bold text-stone-700 max-w-md mx-auto mb-8">
+        Vous devez vous connecter pour y accéder.
+      </p>
+      <InkButton href="/" isDark={true} className="px-8 py-4 text-xs font-black uppercase tracking-widest">
+        Retourner à l'accueil
+      </InkButton>
     </div>
   );
 
