@@ -71,21 +71,18 @@ export default function LibraryPage() {
     }
   };
 
-  // --- LOGIQUE D'ANIMATION 3D (Calcule la position du clic !) ---
+  // --- LOGIQUE D'ANIMATION 3D MULTI-ÉCRANS ---
   const handleOpenBook = (e: React.MouseEvent, book: any) => {
-    // 1. On calcule exactement où se trouve le livre sur l'écran
     const rect = e.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2 - window.innerWidth / 2;
     const y = rect.top + rect.height / 2 - window.innerHeight / 2;
     
     setOriginTransform(`translate(${x}px, ${y}px) scale(0.15)`);
     setSelectedBook(book);
-    setBookState('idle'); // Le livre apparait sur l'étagère
+    setBookState('idle'); 
 
-    // 2. Il s'envole vers le centre
     setTimeout(() => {
       setBookState('flying');
-      // 3. Il s'ouvre magiquement
       setTimeout(() => {
         setBookState('open');
       }, 500);
@@ -93,11 +90,11 @@ export default function LibraryPage() {
   };
 
   const handleCloseBook = () => {
-    setBookState('flying'); // Le livre se referme
+    setBookState('flying');
     setTimeout(() => {
-      setBookState('idle'); // Il retourne dans son trou sur l'étagère
+      setBookState('idle'); 
       setTimeout(() => {
-        setSelectedBook(null); // Il disparait pour laisser place au livre de l'étagère
+        setSelectedBook(null);
       }, 500); 
     }, 500);
   };
@@ -153,7 +150,6 @@ export default function LibraryPage() {
           <div className="paper-card bg-[#FAFAFA] text-stone-900 p-6 md:p-8 mb-16 animate-in slide-in-from-top-4 relative z-20">
             <h2 className="text-sm font-black uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-6">Atelier de Décoration</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-stone-500 mb-3">Mur (Couleur de fond)</label>
                 <div className="grid grid-cols-6 gap-3">
@@ -209,7 +205,6 @@ export default function LibraryPage() {
                 <div className="relative z-10 flex items-end justify-center sm:justify-start gap-[2px] sm:gap-1 px-4 min-h-[16rem]">
                   {shelf.map((book) => {
                     const style = getBookSpineStyle(book.id);
-                    // On rend le livre invisible sur l'étagère s'il est actuellement en train de voler
                     const isFlyingOut = selectedBook?.id === book.id && bookState !== 'idle';
                     
                     return (
@@ -238,69 +233,35 @@ export default function LibraryPage() {
         )}
       </div>
 
-      {/* --- L'ANIMATION DU LIVRE (MODALE) --- */}
+      {/* --- L'ANIMATION DU LIVRE 3D UNIVERSELLE (MOBILE + ORDI) --- */}
       {selectedBook && (
-        <div className={`fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-stone-900/80 backdrop-blur-sm p-0 md:p-8 transition-opacity duration-500 ${bookState !== 'idle' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-stone-900/80 backdrop-blur-sm p-2 md:p-8 transition-opacity duration-500 ${bookState !== 'idle' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="absolute inset-0" onClick={handleCloseBook}></div>
 
-          {/* 1. VERSION MOBILE RESPONSIVE (Glisse du bas, sans 3D complexe) */}
-          <div className={`relative w-full h-[85dvh] max-w-md mx-auto paper-card bg-[#FAFAFA] flex flex-col overflow-hidden md:hidden transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${bookState === 'open' ? 'translate-y-0' : 'translate-y-full'}`}>
-            <button onClick={handleCloseBook} className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] text-stone-900 z-50">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <div className="flex-1 overflow-y-auto flex flex-col p-6">
-              <h2 className="text-2xl font-black text-stone-900 mb-2 uppercase pr-8 mt-4 leading-none">{selectedBook.title}</h2>
-              <p className="text-xs font-bold text-stone-700 mb-6 border-b-2 border-stone-900 pb-4">{selectedBook.author}</p>
-              
-              {selectedBook.cover_url ? (
-                <img src={selectedBook.cover_url} alt="Couverture" className="w-auto max-h-48 object-contain paper-card p-1 bg-white shadow-lg mb-8 mx-auto" />
-              ) : (
-                <div className="w-32 h-48 paper-card bg-stone-200 flex items-center justify-center text-xs font-black uppercase tracking-widest text-stone-600 mb-8 mx-auto">Sans Image</div>
-              )}
-
-              <select value={selectedBook.status} onChange={(e) => handleUpdateBook(selectedBook.id, { status: e.target.value })} className="mb-6 appearance-none paper-card bg-[#F4F3EE] text-stone-900 text-xs font-black uppercase tracking-widest px-4 py-3 outline-none cursor-pointer focus:translate-x-[2px] focus:translate-y-[2px] transition-all">
-                <option value="to_read">À LIRE</option>
-                <option value="reading">EN COURS</option>
-                <option value="read">TERMINÉ</option>
-              </select>
-
-              <div className="mb-6 flex gap-2 text-2xl">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} onClick={() => handleUpdateBook(selectedBook.id, { rating: star })} className={`transition-transform duration-200 ${ (selectedBook.rating || 0) >= star ? 'text-stone-900' : 'text-stone-300' }`}>★</button>
-                ))}
-              </div>
-
-              <textarea placeholder="Notes..." value={selectedBook.notes || ''} onChange={(e) => setSelectedBook({ ...selectedBook, notes: e.target.value })} onBlur={(e) => handleUpdateBook(selectedBook.id, { notes: selectedBook.notes })} className="flex-1 min-h-[120px] text-sm font-medium p-4 bg-[#F4F3EE] paper-card outline-none resize-none text-stone-900 font-serif italic mb-6 focus:translate-x-[2px] focus:translate-y-[2px] transition-all" />
-              <button onClick={() => handleDelete(selectedBook.id)} className="paper-card paper-btn bg-red-50 text-red-700 px-6 py-3 text-[10px] font-black uppercase self-end">Déchirer la fiche</button>
-            </div>
-          </div>
-
-
-          {/* 2. VERSION ORDINATEUR 3D (Vole depuis l'étagère puis s'ouvre) */}
           <div 
-            className={`hidden md:flex relative w-full max-w-4xl h-[600px] perspective-[2000px] transition-transform duration-[500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]`}
+            className={`flex relative w-[95vw] md:w-full max-w-4xl h-[70dvh] md:h-[600px] perspective-[2000px] transition-transform duration-[500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]`}
             style={{ transform: bookState === 'idle' ? originTransform : 'translate(0px, 0px) scale(1)' }}
           >
             
-            <button onClick={handleCloseBook} className={`absolute -top-4 -right-4 w-12 h-12 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] text-stone-900 z-[110] transition-opacity duration-500 ${bookState === 'open' ? 'opacity-100 delay-300' : 'opacity-0'}`}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onClick={handleCloseBook} className={`absolute -top-3 -right-3 md:-top-4 md:-right-4 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center paper-card paper-btn bg-[#F4F3EE] text-stone-900 z-[110] transition-opacity duration-500 ${bookState === 'open' ? 'opacity-100 delay-300' : 'opacity-0'}`}>
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
-            {/* PAGE DE DROITE (Révélée quand ça s'ouvre) */}
-            <div className={`w-1/2 ml-auto bg-[#FAFAFA] paper-card p-10 flex flex-col relative z-10 shadow-2xl overflow-y-auto transition-opacity duration-300 ${bookState === 'open' ? 'opacity-100' : 'opacity-0'}`}>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2">Fiche de Lecture</span>
-                <h2 className="text-3xl font-black text-stone-900 mb-2 leading-none uppercase">{selectedBook.title}</h2>
-                <p className="text-sm font-bold text-stone-700 mb-8 border-b-2 border-stone-900 pb-4">{selectedBook.author}</p>
+            {/* PAGE DE DROITE (Notes) */}
+            <div className={`w-1/2 ml-auto bg-[#FAFAFA] paper-card p-4 md:p-10 flex flex-col relative z-10 shadow-2xl overflow-y-auto transition-opacity duration-300 ${bookState === 'open' ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-1 md:mb-2 line-clamp-1">Fiche de Lecture</span>
+                <h2 className="text-lg md:text-3xl font-black text-stone-900 mb-1 md:mb-2 leading-none uppercase line-clamp-3">{selectedBook.title}</h2>
+                <p className="text-[10px] md:text-sm font-bold text-stone-700 mb-3 md:mb-8 border-b-2 border-stone-900 pb-2 md:pb-4 line-clamp-1">{selectedBook.author}</p>
                 
-                <div className="mb-6 flex flex-col gap-4">
-                  <select value={selectedBook.status} onChange={(e) => handleUpdateBook(selectedBook.id, { status: e.target.value })} className="appearance-none paper-card bg-[#F4F3EE] text-stone-900 text-[10px] font-black uppercase tracking-widest px-4 py-3 outline-none cursor-pointer focus:shadow-[2px_2px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all">
+                <div className="mb-3 md:mb-6 flex flex-col gap-2 md:gap-4">
+                  <select value={selectedBook.status} onChange={(e) => handleUpdateBook(selectedBook.id, { status: e.target.value })} className="appearance-none paper-card bg-[#F4F3EE] text-stone-900 text-[8px] md:text-[10px] font-black uppercase tracking-widest px-2 py-2 md:px-4 md:py-3 outline-none cursor-pointer focus:shadow-[2px_2px_0px_0px_#1c1917] focus:translate-x-[2px] focus:translate-y-[2px] transition-all">
                     <option value="to_read">À LIRE</option>
                     <option value="reading">EN COURS</option>
                     <option value="read">TERMINÉ</option>
                   </select>
-                  <div className="flex items-center justify-between border-t-2 border-stone-200 border-dashed pt-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-500">Note :</label>
-                    <div className="flex gap-2 text-2xl">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between border-t-2 border-stone-200 border-dashed pt-2 md:pt-4">
+                    <label className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-stone-500 mb-1 md:mb-0">Note :</label>
+                    <div className="flex gap-1 md:gap-2 text-lg md:text-2xl">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button key={star} onClick={() => handleUpdateBook(selectedBook.id, { rating: star })} className={`transition-transform duration-200 hover:scale-125 ${ (selectedBook.rating || 0) >= star ? 'text-stone-900' : 'text-stone-300' }`}>★</button>
                       ))}
@@ -308,8 +269,8 @@ export default function LibraryPage() {
                   </div>
                 </div>
 
-                <textarea placeholder="Tapez vos impressions ici..." value={selectedBook.notes || ''} onChange={(e) => setSelectedBook({ ...selectedBook, notes: e.target.value })} onBlur={(e) => handleUpdateBook(selectedBook.id, { notes: selectedBook.notes })} className="flex-1 min-h-[120px] mb-4 text-sm font-medium p-4 bg-[#F4F3EE] paper-card outline-none resize-none text-stone-900 placeholder:text-stone-400 focus:translate-x-[2px] focus:translate-y-[2px] transition-all font-serif italic" />
-                <button onClick={() => handleDelete(selectedBook.id)} className="paper-card paper-btn bg-red-50 text-red-700 border-red-900 px-6 py-3 text-[10px] font-black uppercase tracking-widest self-end">Déchirer la fiche</button>
+                <textarea placeholder="Impressions..." value={selectedBook.notes || ''} onChange={(e) => setSelectedBook({ ...selectedBook, notes: e.target.value })} onBlur={(e) => handleUpdateBook(selectedBook.id, { notes: selectedBook.notes })} className="flex-1 min-h-[80px] md:min-h-[120px] mb-3 md:mb-4 text-xs md:text-sm font-medium p-2 md:p-4 bg-[#F4F3EE] paper-card outline-none resize-none text-stone-900 placeholder:text-stone-400 focus:translate-x-[2px] focus:translate-y-[2px] transition-all font-serif italic" />
+                <button onClick={() => handleDelete(selectedBook.id)} className="paper-card paper-btn bg-red-50 text-red-700 border-red-900 px-3 py-2 md:px-6 md:py-3 text-[8px] md:text-[10px] font-black uppercase tracking-widest self-end">Déchirer</button>
             </div>
 
             {/* PAGE DE GAUCHE (La couverture du livre qui pivote 3D) */}
@@ -317,30 +278,28 @@ export default function LibraryPage() {
               className="absolute top-0 right-0 w-1/2 h-full z-20 origin-left transition-transform duration-[600ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
               style={{ transform: bookState === 'open' ? 'rotateY(-180deg)' : 'rotateY(0deg)', transformStyle: 'preserve-3d' }}
             >
-              {/* Devant : La couverture qui vole vers toi */}
+              {/* Devant : La tranche/couverture fermée qui vole */}
               <div 
-                className="absolute inset-0 bg-[#F4F3EE] paper-card flex items-center justify-center p-8 cursor-pointer shadow-2xl" 
+                className={`absolute inset-0 bg-[#F4F3EE] paper-card flex flex-col items-center justify-between p-4 md:p-8 cursor-pointer transition-colors duration-300`} 
                 style={{ backfaceVisibility: 'hidden' }}
                 onClick={handleCloseBook}
               >
-                 {selectedBook.cover_url ? (
-                  <img src={selectedBook.cover_url} alt="Couverture" className="w-full h-full object-cover paper-card shadow-2xl" />
-                ) : (
-                  <div className="w-full h-full bg-stone-900 flex flex-col items-center justify-center p-8 text-center text-[#F4F3EE]">
-                     <span className="text-3xl font-black uppercase tracking-widest mb-4">{selectedBook.title}</span>
-                     <span className="text-sm font-bold uppercase tracking-widest opacity-70">{selectedBook.author}</span>
+                  <div className="w-12 md:w-20 h-full bg-stone-900 paper-card text-[#F4F3EE] flex flex-col items-center py-4 md:py-6 justify-between transform -translate-x-6 md:-translate-x-12 relative z-50 shadow-xl">
+                      <div className="w-full h-2 border-b-2 border-white/20 opacity-50 absolute top-2"></div>
+                      <span className="text-sm md:text-xl font-black uppercase tracking-widest text-center writing-vertical-rl rotate-180 line-clamp-1 w-full px-1 overflow-hidden" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                          {selectedBook.title}
+                      </span>
                   </div>
-                )}
               </div>
 
-              {/* Arrière : L'intérieur de la couverture (Visible une fois ouvert, affiche la couverture en grand style galerie) */}
-              <div className="absolute inset-0 bg-[#FAFAFA] paper-card flex flex-col items-center justify-center p-8" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+              {/* Arrière : L'intérieur (La Grande Couverture) */}
+              <div className="absolute inset-0 bg-[#FAFAFA] paper-card flex flex-col items-center justify-center p-4 md:p-8" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                 {selectedBook.cover_url ? (
-                  <img src={selectedBook.cover_url} alt="Couverture" className="w-auto max-h-[90%] object-contain paper-card p-2 bg-white shadow-2xl" />
+                  <img src={selectedBook.cover_url} alt="Couverture" className="w-auto max-w-[90%] max-h-[80%] md:max-h-[90%] object-contain paper-card p-1 md:p-2 bg-white shadow-2xl" />
                 ) : (
-                  <div className="w-32 h-48 md:w-56 md:h-80 paper-card bg-stone-200 flex items-center justify-center text-xs font-black uppercase tracking-widest text-stone-600">Sans Image</div>
+                  <div className="w-full h-48 md:h-80 paper-card bg-stone-200 flex items-center justify-center text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-600 text-center">Sans Image</div>
                 )}
-                <span className="absolute bottom-4 right-4 text-[10px] font-black uppercase tracking-widest text-stone-400">Archivé sous le N° {selectedBook.id.slice(0,8)}</span>
+                <span className="absolute bottom-2 md:bottom-4 right-2 md:right-4 text-[6px] md:text-[10px] font-black uppercase tracking-widest text-stone-400">N° {selectedBook.id.slice(0,8)}</span>
               </div>
             </div>
 
