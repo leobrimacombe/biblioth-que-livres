@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       {/* Un fond très clair (slate-50) qui fait ressortir le blanc et les couleurs */}
       <body className={`${inter.variable} ${outfit.variable} font-sans bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-500 selection:text-white`}>
         <Header />
